@@ -3,6 +3,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 import java.lang.StringBuffer;
 import org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgent;
 import org.slf4j.Logger;
@@ -74,10 +75,9 @@ public class SrvDiscoveryAgent extends SimpleDiscoveryAgent {
             .dnsLookupTimeoutMillis(1000)
             .build();
 
-        StringBuffer buf = new StringBuffer();
-        buf.append("static:(");
-        boolean first = true;
+        List<URI> staticHosts = new ArrayList<URI>();
 
+        
         for (int i = 0; i < this.srvHosts.length; i++) {
             if(!this.srvHosts[i].getScheme().equals("srv") || this.srvHosts[i].getSchemeSpecificPart() == null){
                 throw new IllegalArgumentException("Expecting srv:host found : " + this.srvHosts[i].getScheme() + ":" + this.srvHosts[i].getSchemeSpecificPart());
@@ -87,20 +87,21 @@ public class SrvDiscoveryAgent extends SimpleDiscoveryAgent {
             
             List<LookupResult> nodes = resolver.resolve(this.srvHosts[i].getSchemeSpecificPart());
             for(LookupResult currentNode : nodes){
-                if(!first){
-                    buf.append(",");
+                try {
+                    String host = currentNode.host();
+                    staticHosts.add(new URI("tcp://" + host.substring(0, host.length() - 1) + ":" + currentNode.port() ));
+                    
                 }
-                first = false;
-                buf.append("tcp://");
-                buf.append(currentNode.host());
-                buf.append(currentNode.port());
+                catch (URISyntaxException e) {
+                    System.out.println("URI Syntax Error: " + e.getMessage());
+                }     
+                
+                
             }
             
         }
 
-      
-        buf.append(")");
 
-        super.setServices(new String[]{buf.toString()});
+        super.setServices(staticHosts.toArray(new URI[staticHosts.size()]));
     }
 }

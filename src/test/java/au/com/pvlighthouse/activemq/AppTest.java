@@ -4,7 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.hamcrest.Matcher;
-import static org.hamcrest.CoreMatchers.both;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.containsString;
 
 import static org.junit.Assert.assertThat;
@@ -39,7 +39,7 @@ public class AppTest
         discoveryAgent.setServices(services);
         String[] resultServices = discoveryAgent.getServices();
         // Matcher items = hasItems("a", "b");
-        assertThat(resultServices[0],  both(containsString("tcp://xmpp-server.l.google.com.5269")).and(containsString("tcp://alt1.xmpp-server.l.google.com.5269")));
+        assertThat(Arrays.asList(resultServices), hasItems("tcp://xmpp-server.l.google.com:5269","tcp://alt1.xmpp-server.l.google.com:5269"));
         
     }
 }
