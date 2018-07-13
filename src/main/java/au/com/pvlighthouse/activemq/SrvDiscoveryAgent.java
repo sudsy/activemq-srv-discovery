@@ -2,9 +2,15 @@ package au.com.pvlighthouse.activemq;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.List;
+import java.lang.StringBuffer;
 import org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.spotify.dns.DnsException;
+import com.spotify.dns.DnsSrvResolver;
+import com.spotify.dns.DnsSrvResolvers;
+import com.spotify.dns.LookupResult;
 
 
 public class SrvDiscoveryAgent extends SimpleDiscoveryAgent {
@@ -13,10 +19,10 @@ public class SrvDiscoveryAgent extends SimpleDiscoveryAgent {
 
     private URI[] srvHosts = new URI[]{};
 
-    @Override
-    public String[] getServices() {
-        return Arrays.copyOf(this.srvHosts, this.srvHosts.length, String[].class);
-    }
+    // @Override
+    // public String[] getServices() {
+    //     return Arrays.copyOf(this.srvHosts, this.srvHosts.length, String[].class);
+    // }
 
     @Override
     public void setServices(String services) {
@@ -62,23 +68,38 @@ public class SrvDiscoveryAgent extends SimpleDiscoveryAgent {
             throw new IllegalArgumentException("Expecting at least 1 argument");
         }
 
+        DnsSrvResolver resolver = DnsSrvResolvers.newBuilder()
+            .cachingLookups(true)
+            .retainingDataOnFailures(true)
+            .dnsLookupTimeoutMillis(1000)
+            .build();
+
+        StringBuffer buf = new StringBuffer();
+        buf.append("static:(");
+        boolean first = true;
+
         for (int i = 0; i < this.srvHosts.length; i++) {
-            if(!this.srvHosts[i].getScheme().equals("srv")){
-                throw new IllegalArgumentException("Expecting srv protocol found : " + this.srvHosts[i].getScheme());
+            if(!this.srvHosts[i].getScheme().equals("srv") || this.srvHosts[i].getSchemeSpecificPart() == null){
+                throw new IllegalArgumentException("Expecting srv:host found : " + this.srvHosts[i].getScheme() + ":" + this.srvHosts[i].getSchemeSpecificPart());
+            }
+            
+            
+            
+            List<LookupResult> nodes = resolver.resolve(this.srvHosts[i].getSchemeSpecificPart());
+            for(LookupResult currentNode : nodes){
+                if(!first){
+                    buf.append(",");
+                }
+                first = false;
+                buf.append("tcp://");
+                buf.append(currentNode.host());
+                buf.append(currentNode.port());
             }
             
         }
-        StringBuffer buf = new StringBuffer();
 
-        buf.append("failover:(");
-
-        for (int i = 0; i < (srvHosts.length - 1); i++) {
-            buf.append(srvHosts[i]);
-            buf.append(',');
-        }
-        buf.append(srvHosts[srvHosts.length - 1]);
-
-        buf.append(")?randomize=false&maxReconnectAttempts=0");
+      
+        buf.append(")");
 
         super.setServices(new String[]{buf.toString()});
     }

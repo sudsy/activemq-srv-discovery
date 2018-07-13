@@ -6,13 +6,13 @@
         {
             "label": "verify",
             "type": "shell",
-            "command": "docker run -it --rm --name activemq-srv-discovery -v ${HOME}\\.m2:/root/.m2 -v ${Pwd}:/usr/src/mymaven -w /usr/src/mymaven maven:3.5.4 mvn -B verify",
+            "command": "docker run -it --rm --name activemq-srv-discovery -v ${HOME}\\.m2:/root/.m2 -v ${Pwd}:/usr/src/mymaven -w /usr/src/mymaven maven:3.5.4-jdk-11 mvn -B verify",
             "group": "build"
         },
         {
             "label": "compile",
             "type": "shell",
-            "command": "docker run -it --rm --name activemq-srv-discovery -v ${HOME}\\.m2:/root/.m2 -v ${Pwd}:/usr/src/mymaven -w /usr/src/mymaven maven:3.5.4 mvn -B compile",
+            "command": "docker run -it --rm --name activemq-srv-discovery -v ${HOME}\\.m2:/root/.m2 -v ${Pwd}:/usr/src/mymaven -w /usr/src/mymaven maven:3.5.4-jdk-11 mvn -B compile",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -21,7 +21,7 @@
         {
             "label": "test",
             "type": "shell",
-            "command": "docker run -it --rm --name activemq-srv-discovery -v ${HOME}\\.m2:/root/.m2 -v ${Pwd}:/usr/src/mymaven -w /usr/src/mymaven maven:3.5.4 mvn -B test",
+            "command": "docker run -it --rm --name activemq-srv-discovery -v ${HOME}\\.m2:/root/.m2 -v ${Pwd}:/usr/src/mymaven -w /usr/src/mymaven maven:3.5.4-jdk-11 mvn -B test",
             "group": "test"
         }
     ]
